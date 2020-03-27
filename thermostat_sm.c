@@ -54,7 +54,13 @@
 **************************************************************************
 */
 
+		lcd1602_fc113_struct h1_lcd1602_fc113 =
+		{
+			.i2c = &hi2c1,
+			.device_i2c_address = ADR_I2C_FC113
+		};
 
+		int cnt_int;
 /*
 **************************************************************************
 *                        LOCAL FUNCTION PROTOTYPES
@@ -68,7 +74,7 @@
 */
 
 void Thermostat_Init(void) {
-	#define SOFT_VERSION 123
+
 	int soft_version_arr_int[3];
 	soft_version_arr_int[0] = ((SOFT_VERSION) / 100) %10 ;
 	soft_version_arr_int[1] = ((SOFT_VERSION) /  10) %10 ;
@@ -79,12 +85,24 @@ void Thermostat_Init(void) {
 			soft_version_arr_int[0], soft_version_arr_int[1], soft_version_arr_int[2]);
 	HAL_UART_Transmit(&huart1, (uint8_t *)DataChar, strlen(DataChar), 100);
 
+	I2Cdev_init(&hi2c1);
+	I2C_ScanBusFlow(&hi2c1, &huart1);
+
+	LCD1602_Init(&h1_lcd1602_fc113);
+	I2C_ScanBus_to_LCD1602(&h1_lcd1602_fc113);
+	LCD1602_Clear(&h1_lcd1602_fc113);
 }
 //************************************************************************
 
 void Thermostat_Main(void) {
 	  HAL_GPIO_TogglePin(LED_BOARD_GPIO_Port,LED_BOARD_Pin);
 	  HAL_Delay(1100);
+		char DataChar[100];
+		sprintf(DataChar,"%d\r\n", cnt_int++);
+		HAL_UART_Transmit(&huart1, (uint8_t *)DataChar, strlen(DataChar), 100);
+		LCD1602_Print_Line(&h1_lcd1602_fc113, DataChar, strlen(DataChar));
+		LCD1602_Cursor_Return(&h1_lcd1602_fc113);
+
 }
 //-------------------------------------------------------------------------------------------------
 
