@@ -33,6 +33,7 @@
 	#include "thermostat_config.h"
 	#include "i2c_techmaker_sm.h"
 	#include "lcd1602_fc113_sm.h"
+	#include "ds18b20_sm.h"
 
 /*
 **************************************************************************

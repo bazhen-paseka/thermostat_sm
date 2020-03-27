@@ -61,6 +61,10 @@
 		};
 
 		int cnt_int;
+
+		char ds18b20_rom_1[8] = {0x28, 0xFF, 0x1F, 0x4C, 0x23, 0x17, 0x03, 0xB9};
+		char ds18b20_rom_2[8] = {0x28, 0xFF, 0xB0, 0x4E, 0x23, 0x17, 0x03, 0xE2};
+
 /*
 **************************************************************************
 *                        LOCAL FUNCTION PROTOTYPES
@@ -91,18 +95,32 @@ void Thermostat_Init(void) {
 	LCD1602_Init(&h1_lcd1602_fc113);
 	I2C_ScanBus_to_LCD1602(&h1_lcd1602_fc113);
 	LCD1602_Clear(&h1_lcd1602_fc113);
+	//HAL_GPIO_TogglePin(RELAY_2_GPIO_Port, RELAY_2_Pin);
 }
 //************************************************************************
 
 void Thermostat_Main(void) {
 	  HAL_GPIO_TogglePin(LED_BOARD_GPIO_Port,LED_BOARD_Pin);
-	  HAL_Delay(1100);
+	  //HAL_GPIO_TogglePin(RELAY_1_GPIO_Port, RELAY_1_Pin);
+	  //HAL_GPIO_TogglePin(RELAY_2_GPIO_Port, RELAY_2_Pin);
+
+	  //DS18b20_ConvertTemp_SkipROM();
+	  DS18b20_ConvertTemp_MatchROM(ds18b20_rom_1);
+	  DS18b20_ConvertTemp_MatchROM(ds18b20_rom_2);
+
+	  HAL_Delay(1000);
+
+	  //int temp = DS18b20_Get_Temp_SkipROM()/16;
+	  int temp1 = DS18b20_Get_temp_MatchROM(ds18b20_rom_1)/16;
+	  int temp2 = DS18b20_Get_temp_MatchROM(ds18b20_rom_2)/16;
+
 		char DataChar[100];
-		sprintf(DataChar,"%d\r\n", cnt_int++);
+		sprintf(DataChar,"%d) %d; %d;\r\n", cnt_int++, temp1, temp2);
 		HAL_UART_Transmit(&huart1, (uint8_t *)DataChar, strlen(DataChar), 100);
 		LCD1602_Print_Line(&h1_lcd1602_fc113, DataChar, strlen(DataChar));
 		LCD1602_Cursor_Return(&h1_lcd1602_fc113);
-
+		//DS18b20_Print_serial_number(&huart1);
+		HAL_Delay(4000);
 }
 //-------------------------------------------------------------------------------------------------
 
