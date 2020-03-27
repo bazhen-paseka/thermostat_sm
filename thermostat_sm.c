@@ -95,20 +95,21 @@ void Thermostat_Init(void) {
 	LCD1602_Init(&h1_lcd1602_fc113);
 	I2C_ScanBus_to_LCD1602(&h1_lcd1602_fc113);
 	LCD1602_Clear(&h1_lcd1602_fc113);
-	//HAL_GPIO_TogglePin(RELAY_2_GPIO_Port, RELAY_2_Pin);
+	HAL_GPIO_TogglePin(RELAY_2_GPIO_Port, RELAY_2_Pin);
 }
 //************************************************************************
 
 void Thermostat_Main(void) {
 	  HAL_GPIO_TogglePin(LED_BOARD_GPIO_Port,LED_BOARD_Pin);
-	  //HAL_GPIO_TogglePin(RELAY_1_GPIO_Port, RELAY_1_Pin);
-	  //HAL_GPIO_TogglePin(RELAY_2_GPIO_Port, RELAY_2_Pin);
+	  HAL_GPIO_TogglePin(RELAY_1_GPIO_Port, RELAY_1_Pin);
+
 
 	  //DS18b20_ConvertTemp_SkipROM();
 	  DS18b20_ConvertTemp_MatchROM(ds18b20_rom_1);
 	  DS18b20_ConvertTemp_MatchROM(ds18b20_rom_2);
 
 	  HAL_Delay(1000);
+	  HAL_GPIO_TogglePin(RELAY_2_GPIO_Port, RELAY_2_Pin);
 
 	  //int temp = DS18b20_Get_Temp_SkipROM()/16;
 	  int temp1 = DS18b20_Get_temp_MatchROM(ds18b20_rom_1)/16;
