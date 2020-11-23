@@ -69,7 +69,6 @@
 			.device_i2c_address = ADR_I2C_FC113
 		};
 
-		int cnt_int;
 		char ds18b20_rom_1[8] = { 0x28, 0xFF, 0x55, 0x64, 0x4C, 0x04, 0x00, 0x20 } ;
 		//char ds18b20_rom_2[8] = { 0x28, 0xFF, 0x1F, 0x4C, 0x23, 0x17, 0x03, 0xB9 } ;
 		char ds18b20_rom_2[8] = { 0x28, 0xFF, 0xB0, 0x4E, 0x23, 0x17, 0x03, 0xE2 } ;	//	bad
@@ -131,7 +130,16 @@ void Thermostat_Main(void) {
 	DS18b20_ConvertTemp_MatchROM(ds18b20_rom_2);
 	DS18b20_ConvertTemp_MatchROM(ds18b20_rom_3);
 
+	RTC_TimeTypeDef TimeSt = { 0 } ;
+	RTC_DateTypeDef DateSt = { 0 } ;
+	ds3231_GetTime ( ADR_I2C_DS3231, &TimeSt ) ;
+	ds3231_GetDate ( ADR_I2C_DS3231, &DateSt ) ;
+	ds3231_PrintTime( &TimeSt, &huart1 ) ;
+	ds3231_PrintDate( &DateSt, &huart1 ) ;
+
+	char DataChar[100];
 	HAL_Delay(1000);
+
 	HAL_GPIO_TogglePin(RELAY_2_GPIO_Port, RELAY_2_Pin);
 
 	//int temp = DS18b20_Get_Temp_SkipROM()/16;
@@ -139,15 +147,19 @@ void Thermostat_Main(void) {
 	int temp2 = DS18b20_Get_temp_MatchROM(ds18b20_rom_2)/16;
 	int temp3 = DS18b20_Get_temp_MatchROM(ds18b20_rom_3)/16;
 
-	char DataChar[100];
-	sprintf(DataChar,"%d) %d; %d; %d;\r\n", cnt_int++, temp1, temp2, temp3);
+	sprintf(DataChar,"%02d:%02d:%02d [%d]\r\n ",TimeSt.Hours, TimeSt.Minutes, TimeSt.Seconds, (DateSt.WeekDay+4)%7);
+	LCD1602_Print_Line(&h1_lcd1602_fc113, DataChar, strlen(DataChar));
+
+	sprintf(DataChar," %d; %d; %d;\r\n", temp1, temp2, temp3);
 	HAL_UART_Transmit(&huart1, (uint8_t *)DataChar, strlen(DataChar), 100);
 
 	sprintf(DataChar,"%d %d %d\r\n", temp1, temp2, temp3);
 	LCD1602_Print_Line(&h1_lcd1602_fc113, DataChar, strlen(DataChar));
-	LCD1602_Cursor_Return(&h1_lcd1602_fc113);
 	//DS18b20_Print_serial_number(&huart1);
-	HAL_Delay(14000);
+
+
+	LCD1602_Cursor_Return(&h1_lcd1602_fc113);
+	HAL_Delay(4000);
 }
 //-------------------------------------------------------------------------------------------------
 
