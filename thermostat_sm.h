@@ -34,6 +34,10 @@
 	#include "i2c_techmaker_sm.h"
 	#include "lcd1602_fc113_sm.h"
 	#include "ds18b20_sm.h"
+	#include "ds3231_sm.h"
+
+#include "rtc.h"
+
 
 /*
 **************************************************************************
@@ -64,7 +68,8 @@
 *                              FUNCTION PROTOTYPES
 **************************************************************************
 */
-	void Thermostat_Init(void);
-	void Thermostat_Main(void);
+	void Thermostat_Init  ( void ) ;
+	void Thermostat_Main  ( void ) ;
+	void Set_RTC_IRQ_Flag ( void ) ;
 
 #endif /* THERMOSTAT_SM_H_INCLUDED */
