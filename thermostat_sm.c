@@ -96,7 +96,7 @@ void Thermostat_Init(void) {
 	soft_version_arr_int[2] = ((SOFT_VERSION)      ) %10 ;
 
 	char DataChar[100];
-	sprintf(DataChar,"\r\n\tThermoStat 2020-November-23 v%d.%d.%d \r\n\tUART1 for debug on speed 115200/8-N-1\r\n\r\n",
+	sprintf(DataChar,"\r\n\tThermoStat 2020-November-24 v%d.%d.%d \r\n\tUART1 for debug on speed 115200/8-N-1\r\n",
 			soft_version_arr_int[0], soft_version_arr_int[1], soft_version_arr_int[2]);
 	HAL_UART_Transmit(&huart1, (uint8_t *)DataChar, strlen(DataChar), 100);
 
