@@ -34,6 +34,7 @@
 	#include "i2c_techmaker_sm.h"
 	#include "lcd1602_fc113_sm.h"
 	#include "ds18b20_sm.h"
+	#include "ds3231_sm.h"
 
 /*
 **************************************************************************
