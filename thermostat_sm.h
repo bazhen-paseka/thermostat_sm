@@ -36,6 +36,9 @@
 	#include "ds18b20_sm.h"
 	#include "ds3231_sm.h"
 
+#include "rtc.h"
+
+
 /*
 **************************************************************************
 *								    DEFINES
@@ -65,7 +68,8 @@
 *                              FUNCTION PROTOTYPES
 **************************************************************************
 */
-	void Thermostat_Init(void);
-	void Thermostat_Main(void);
+	void Thermostat_Init  ( void ) ;
+	void Thermostat_Main  ( void ) ;
+	void Set_RTC_IRQ_Flag ( void ) ;
 
 #endif /* THERMOSTAT_SM_H_INCLUDED */
