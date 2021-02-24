@@ -238,7 +238,7 @@ void Thermostat_Main(void) {
 		sprintf(DataChar, "%02d:%02d:%02d %s %d\n" , TimeSt.Hours, TimeSt.Minutes, TimeSt.Seconds, WeekDay_char[(DateSt.WeekDay+3)%6] ,relay_status_u8) ;
 		LCD1602_Print_Line(&h1_lcd1602_fc113, DataChar, strlen(DataChar));
 
-		sprintf(DataChar,"%d %d %d %d\r\n", temp1/10, temp2/10, temp3/10, temp_average_i8 ) ;
+		sprintf(DataChar,"%03d %03d %03d %04d\r\n", temp1/10, temp2/10, temp3/10, temp_average_i8 ) ;
 		LCD1602_Print_Line(&h1_lcd1602_fc113, DataChar, strlen(DataChar));
 		//DS18b20_Print_serial_number(&huart1);
 		LCD1602_Cursor_Return(&h1_lcd1602_fc113);
