@@ -73,6 +73,12 @@
 		char ds18b20_rom_1[8] = { 0x28, 0xFF, 0xB0, 0x4E, 0x23, 0x17, 0x03, 0xE2 } ;	//	bad
 		char ds18b20_rom_2[8] = { 0x28, 0xFF, 0x31, 0x50, 0x23, 0x17, 0x03, 0xC9 } ;
 		char ds18b20_rom_3[8] = { 0x28, 0xFF, 0x55, 0x64, 0x4C, 0x04, 0x00, 0x20 } ;
+
+		int temp1 = 0;
+		int temp2 = 0;
+		int temp3 = 0;
+		int temp_average_i8  = 0 ;
+
 		volatile uint8_t rtc_irq_u8	= 0;
 
 /*
@@ -115,9 +121,8 @@ void Thermostat_Init(void) {
 	I2C_ScanBusFlow(&hi2c1, &huart1);
 
 	LCD1602_Init(&h1_lcd1602_fc113);
-	LCD1602_scan_I2C_bus(&h1_lcd1602_fc113);
-	LCD1602_Clear(&h1_lcd1602_fc113);
-	//HAL_GPIO_TogglePin(RELAY_2_GPIO_Port, RELAY_2_Pin);
+//	LCD1602_scan_I2C_bus(&h1_lcd1602_fc113);
+//	LCD1602_Clear(&h1_lcd1602_fc113);
 
 	//DS18b20_Print_serial_number(&huart1);
 	//Set_Day_and_Time_to_DS3231 (2020, 11, 23, 17, 22, 00);
@@ -140,16 +145,11 @@ void Thermostat_Init(void) {
 	DS18b20_ConvertTemp_MatchROM(ds18b20_rom_1);
 	DS18b20_ConvertTemp_MatchROM(ds18b20_rom_2);
 	DS18b20_ConvertTemp_MatchROM(ds18b20_rom_3);
-	//	HAL_GPIO_TogglePin(RELAY_2_GPIO_Port, RELAY_2_Pin);
 	HAL_Delay(1000);
-	//	HAL_GPIO_TogglePin(RELAY_2_GPIO_Port, RELAY_2_Pin);
-
-	//int temp = DS18b20_Get_Temp_SkipROM()/16;
 	int temp1 = DS18b20_Get_temp_MatchROM(ds18b20_rom_1)/16;
 	int temp2 = DS18b20_Get_temp_MatchROM(ds18b20_rom_2)/16;
 	int temp3 = DS18b20_Get_temp_MatchROM(ds18b20_rom_3)/16;
 
-	//sprintf(DataChar,"%02d:%02d:%02d [%d]\r\n ",TimeSt.Hours, TimeSt.Minutes, TimeSt.Seconds, (DateSt.WeekDay+4)%7);
 	sprintf(DataChar,"%02d:%02d:%02d %s\n",TimeSt.Hours, TimeSt.Minutes, TimeSt.Seconds, WeekDay_char[(DateSt.WeekDay+3)%6]);
 	LCD1602_Print_Line(&h1_lcd1602_fc113, DataChar, strlen(DataChar));
 
@@ -169,6 +169,7 @@ void Thermostat_Init(void) {
 //************************************************************************
 
 void Thermostat_Main(void) {
+
 	char DataChar[100];
 	char WeekDay_char[7][4];
 	sprintf(WeekDay_char[0],"SUN");
@@ -179,36 +180,37 @@ void Thermostat_Main(void) {
 	sprintf(WeekDay_char[5],"FRI");
 	sprintf(WeekDay_char[6],"SAT");
 
-
-	if 	(rtc_irq_u8 == 1) {
-//	HAL_GPIO_TogglePin ( LED_BOARD_GPIO_Port, LED_BOARD_Pin ) ;
-//	HAL_GPIO_TogglePin ( RELAY_2_GPIO_Port  , RELAY_2_Pin   ) ;
-
 	RTC_TimeTypeDef TimeSt = { 0 } ;
 	RTC_DateTypeDef DateSt = { 0 } ;
+
+
+	if 	(rtc_irq_u8 == 1) {
 	ds3231_GetTime ( ADR_I2C_DS3231, &TimeSt ) ;
 	ds3231_GetDate ( ADR_I2C_DS3231, &DateSt ) ;
 
+	if (TimeSt.Seconds == 55) {
+		//DS18b20_ConvertTemp_SkipROM();
+		DS18b20_ConvertTemp_MatchROM(ds18b20_rom_1 ) ;
+		DS18b20_ConvertTemp_MatchROM(ds18b20_rom_2 ) ;
+		DS18b20_ConvertTemp_MatchROM(ds18b20_rom_3 ) ;
+		sprintf(DataChar,"\t\tConvert temp\r\n" ) ;
+		HAL_UART_Transmit(&huart1 , (uint8_t *)DataChar , strlen(DataChar) , 100 ) ;
+	}
 
-	//if ((TimeSt.Seconds == 0) || (TimeSt.Seconds == 30)) {
+	if (TimeSt.Seconds == 57) {
+		temp1 = DS18b20_Get_temp_MatchROM(ds18b20_rom_1)/16 ;
+		temp2 = DS18b20_Get_temp_MatchROM(ds18b20_rom_2)/16 ;
+		temp3 = DS18b20_Get_temp_MatchROM(ds18b20_rom_3)/16 ;
+		sprintf( DataChar , "\t\tGet temp\r\n" ) ;
+		HAL_UART_Transmit( &huart1 , (uint8_t *)DataChar , strlen(DataChar) , 100 ) ;
+	}
+
 	if (TimeSt.Seconds == 0) {
-		//ds3231_PrintTime( &TimeSt, &huart1 ) ;
-		//sprintf(DataChar,"%02d:%02d:%02d [%d] ",TimeSt.Hours, TimeSt.Minutes, TimeSt.Seconds, (DateSt.WeekDay+4)%7);
 		sprintf(DataChar,"%02d:%02d:%02d %s ",TimeSt.Hours, TimeSt.Minutes, TimeSt.Seconds, WeekDay_char[(DateSt.WeekDay+3)%6]);
 		HAL_UART_Transmit(&huart1, (uint8_t *)DataChar, strlen(DataChar), 100);
 		ds3231_PrintDate( &DateSt, &huart1 ) ;
 
-		//DS18b20_ConvertTemp_SkipROM();
-		DS18b20_ConvertTemp_MatchROM(ds18b20_rom_1);
-		DS18b20_ConvertTemp_MatchROM(ds18b20_rom_2);
-		DS18b20_ConvertTemp_MatchROM(ds18b20_rom_3);
-		HAL_Delay(1000);
-
-		//int temp = DS18b20_Get_Temp_SkipROM()/16;
-		int temp1 = DS18b20_Get_temp_MatchROM(ds18b20_rom_1)/16;
-		int temp2 = DS18b20_Get_temp_MatchROM(ds18b20_rom_2)/16;
-		int temp3 = DS18b20_Get_temp_MatchROM(ds18b20_rom_3)/16;
-		int temp_average_i8 = (temp1 + temp2 + temp3) / 3 ;
+		temp_average_i8 = (temp1 + temp2 + temp3) / 3 ;
 
 		static char relay_status_char[4] = { "nop" };
 		static uint8_t relay_status_u8 = 0 ;
@@ -222,7 +224,7 @@ void Thermostat_Main(void) {
 		}
 
 		if ( relay_status_u8 == 1 ) {
-			sprintf(relay_status_char,"On_");
+			sprintf(relay_status_char,"On ");
 			HAL_GPIO_WritePin ( LED_BOARD_GPIO_Port, LED_BOARD_Pin , GPIO_PIN_RESET ) ;
 			HAL_GPIO_WritePin ( RELAY_2_GPIO_Port  , RELAY_2_Pin   , GPIO_PIN_RESET ) ;
 		}
