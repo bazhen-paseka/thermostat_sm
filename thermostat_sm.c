@@ -211,7 +211,7 @@ void Thermostat_Main(void) {
 		int temp_average_i8 = (temp1 + temp2 + temp3) / 3 ;
 
 		static char relay_status_char[4] = { "nop" };
-		uint8_t relay_status_u8 = 0 ;
+		static uint8_t relay_status_u8 = 0 ;
 
 		if (temp_average_i8 < TEMP_MIN )	{
 			relay_status_u8 = 1 ;
