@@ -71,5 +71,6 @@
 	void Thermostat_Init  ( void ) ;
 	void Thermostat_Main  ( void ) ;
 	void Set_RTC_IRQ_Flag ( void ) ;
+	void Reset_RTC_IRQ_Flag ( void ) ;
 
 #endif /* THERMOSTAT_SM_H_INCLUDED */

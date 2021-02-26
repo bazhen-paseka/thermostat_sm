@@ -254,7 +254,7 @@ void Thermostat_Main(void) {
 		LCD1602_Cursor_Return(&h1_lcd1602_fc113);
 	}
 
-	rtc_irq_u8 = 0;
+	Reset_RTC_IRQ_Flag();
 	ds3231_Alarm1_ClearStatusBit(ADR_I2C_DS3231);
 	}
 }
@@ -264,6 +264,9 @@ void Set_RTC_IRQ_Flag ( void ) {
 	rtc_irq_u8 = 1;
 }
 
+void Reset_RTC_IRQ_Flag ( void ) {
+	rtc_irq_u8 = 0;
+}
 
 //************************************************************************
 
