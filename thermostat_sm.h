@@ -24,11 +24,13 @@
 *								INCLUDE FILES
 **************************************************************************
 */
+	#include "stdio.h"
+	#include <string.h>
+
 	#include "stm32f1xx_hal.h"
 	#include "gpio.h"
 	#include "usart.h"
-	#include "stdio.h"
-	#include <string.h>
+	#include "iwdg.h"
 
 	#include "thermostat_config.h"
 	#include "i2c_techmaker_sm.h"

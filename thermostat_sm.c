@@ -113,7 +113,7 @@ void Thermostat_Init(void) {
 	soft_version_arr_int[2] = ((SOFT_VERSION)      ) %10 ;
 
 	char DataChar[100];
-	sprintf(DataChar,"\r\n\tThermoStat 2021-February-24 v%d.%d.%d \r\n\tUART1 for debug on speed 115200/8-N-1\r\n",
+	sprintf(DataChar,"\r\n\tThermoStat 2021-February-26 v%d.%d.%d \r\n\tUART1 for debug on speed 115200/8-N-1\r\n",
 			soft_version_arr_int[0], soft_version_arr_int[1], soft_version_arr_int[2]);
 	HAL_UART_Transmit(&huart1, (uint8_t *)DataChar, strlen(DataChar), 100);
 
@@ -141,14 +141,16 @@ void Thermostat_Init(void) {
 	HAL_UART_Transmit(&huart1, (uint8_t *)DataChar, strlen(DataChar), 100);
 	ds3231_PrintDate( &DateSt, &huart1 ) ;
 
-	//DS18b20_ConvertTemp_SkipROM();
-	DS18b20_ConvertTemp_MatchROM(ds18b20_rom_1);
-	DS18b20_ConvertTemp_MatchROM(ds18b20_rom_2);
-	DS18b20_ConvertTemp_MatchROM(ds18b20_rom_3);
-	HAL_Delay(1000);
-	int temp1 = DS18b20_Get_temp_MatchROM(ds18b20_rom_1)/16;
-	int temp2 = DS18b20_Get_temp_MatchROM(ds18b20_rom_2)/16;
-	int temp3 = DS18b20_Get_temp_MatchROM(ds18b20_rom_3)/16;
+		HAL_IWDG_Refresh(&hiwdg) ;
+		//DS18b20_ConvertTemp_SkipROM();
+		DS18b20_ConvertTemp_MatchROM(ds18b20_rom_1);
+		DS18b20_ConvertTemp_MatchROM(ds18b20_rom_2);
+		DS18b20_ConvertTemp_MatchROM(ds18b20_rom_3);
+		HAL_Delay(1000);
+		int temp1 = DS18b20_Get_temp_MatchROM(ds18b20_rom_1)/16;
+		int temp2 = DS18b20_Get_temp_MatchROM(ds18b20_rom_2)/16;
+		int temp3 = DS18b20_Get_temp_MatchROM(ds18b20_rom_3)/16;
+		HAL_IWDG_Refresh(&hiwdg) ;
 
 	sprintf(DataChar,"%02d:%02d:%02d %s\n",TimeSt.Hours, TimeSt.Minutes, TimeSt.Seconds, WeekDay_char[(DateSt.WeekDay+3)%6]);
 	LCD1602_Print_Line(&h1_lcd1602_fc113, DataChar, strlen(DataChar));
@@ -193,16 +195,12 @@ void Thermostat_Main(void) {
 		DS18b20_ConvertTemp_MatchROM(ds18b20_rom_1 ) ;
 		DS18b20_ConvertTemp_MatchROM(ds18b20_rom_2 ) ;
 		DS18b20_ConvertTemp_MatchROM(ds18b20_rom_3 ) ;
-		sprintf(DataChar,"\t\tConvert temp\r\n" ) ;
-		HAL_UART_Transmit(&huart1 , (uint8_t *)DataChar , strlen(DataChar) , 100 ) ;
 	}
 
 	if (TimeSt.Seconds == 57) {
 		temp1 = DS18b20_Get_temp_MatchROM(ds18b20_rom_1)/16 ;
 		temp2 = DS18b20_Get_temp_MatchROM(ds18b20_rom_2)/16 ;
 		temp3 = DS18b20_Get_temp_MatchROM(ds18b20_rom_3)/16 ;
-		sprintf( DataChar , "\t\tGet temp\r\n" ) ;
-		HAL_UART_Transmit( &huart1 , (uint8_t *)DataChar , strlen(DataChar) , 100 ) ;
 	}
 
 	if (TimeSt.Seconds == 0) {
@@ -255,9 +253,9 @@ void Thermostat_Main(void) {
 		LCD1602_Print_Line(&h1_lcd1602_fc113, DataChar, strlen(DataChar));
 		LCD1602_Cursor_Return(&h1_lcd1602_fc113);
 	}
-
-	Reset_RTC_IRQ_Flag();
-	ds3231_Alarm1_ClearStatusBit(ADR_I2C_DS3231);
+	HAL_IWDG_Refresh(&hiwdg) ;
+	Reset_RTC_IRQ_Flag() ;
+	ds3231_Alarm1_ClearStatusBit(ADR_I2C_DS3231) ;
 	}
 }
 //-------------------------------------------------------------------------------------------------
@@ -266,6 +264,7 @@ void Set_RTC_IRQ_Flag ( void ) {
 	rtc_irq_u8 = 1;
 }
 
+//************************************************************************
 void Reset_RTC_IRQ_Flag ( void ) {
 	rtc_irq_u8 = 0;
 }
