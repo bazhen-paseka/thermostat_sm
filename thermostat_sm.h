@@ -24,11 +24,14 @@
 *								INCLUDE FILES
 **************************************************************************
 */
+	#include "stdio.h"
+	#include <string.h>
+
+	#include "main.h"
 	#include "stm32f1xx_hal.h"
 	#include "gpio.h"
 	#include "usart.h"
-	#include "stdio.h"
-	#include <string.h>
+	#include "iwdg.h"
 
 	#include "thermostat_config.h"
 	#include "i2c_techmaker_sm.h"
@@ -45,11 +48,23 @@
 **************************************************************************
 */
 
+	#define DS18B20QNT	3
+
 /*
 **************************************************************************
 *								   DATA TYPES
 **************************************************************************
 */
+
+	typedef struct {
+		int	ds18b20_i[DS18B20QNT]	;
+		int average_i	;
+	} TEMP_18B20_struct;
+
+	//---------------------------------------------------------------------
+
+	TEMP_18B20_struct Temp_str;
+
 
 /*
 **************************************************************************
@@ -71,5 +86,6 @@
 	void Thermostat_Init  ( void ) ;
 	void Thermostat_Main  ( void ) ;
 	void Set_RTC_IRQ_Flag ( void ) ;
+	void Reset_RTC_IRQ_Flag ( void ) ;
 
 #endif /* THERMOSTAT_SM_H_INCLUDED */
