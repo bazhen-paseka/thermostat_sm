@@ -74,11 +74,6 @@
 		char ds18b20_rom_2[8] = { 0x28, 0xFF, 0x31, 0x50, 0x23, 0x17, 0x03, 0xC9 } ;
 		char ds18b20_rom_3[8] = { 0x28, 0xFF, 0x55, 0x64, 0x4C, 0x04, 0x00, 0x20 } ;
 
-		int temp1 = 0;
-		int temp2 = 0;
-		int temp3 = 0;
-		int temp_average_i8  = 0 ;
-
 		volatile uint8_t rtc_irq_u8	= 0;
 
 /*
@@ -135,11 +130,9 @@ void Thermostat_Init(void) {
 	HAL_RTC_SetTime( &hrtc, &TimeSt, RTC_FORMAT_BIN );
 	HAL_RTC_SetDate( &hrtc, &DateSt, RTC_FORMAT_BIN );
 
-	//ds3231_PrintTime( &TimeSt, &huart1 ) ;
-	//sprintf(DataChar,"%02d:%02d:%02d [%d] ",TimeSt.Hours, TimeSt.Minutes, TimeSt.Seconds, (DateSt.WeekDay+4)%7);
-	sprintf(DataChar,"%02d:%02d:%02d %s ",TimeSt.Hours, TimeSt.Minutes, TimeSt.Seconds, WeekDay_char[(DateSt.WeekDay+3)%6]);
-	HAL_UART_Transmit(&huart1, (uint8_t *)DataChar, strlen(DataChar), 100);
-	ds3231_PrintDate( &DateSt, &huart1 ) ;
+	ds3231_PrintTime		( &TimeSt, &huart1 ) ;
+	ds3231_PrintWeek3char	( &DateSt, &huart1 ) ;
+	ds3231_PrintDate		( &DateSt, &huart1 ) ;
 
 		HAL_IWDG_Refresh(&hiwdg) ;
 		//DS18b20_ConvertTemp_SkipROM();
@@ -198,28 +191,21 @@ void Thermostat_Main(void) {
 	}
 
 	if (TimeSt.Seconds == 57) {
-		temp1 = DS18b20_Get_temp_MatchROM(ds18b20_rom_1)/16 ;
-		temp2 = DS18b20_Get_temp_MatchROM(ds18b20_rom_2)/16 ;
-		temp3 = DS18b20_Get_temp_MatchROM(ds18b20_rom_3)/16 ;
+		Temp_str.ds18b20_i[0] = DS18b20_Get_temp_MatchROM(ds18b20_rom_1)/16 ;
+		Temp_str.ds18b20_i[1] = DS18b20_Get_temp_MatchROM(ds18b20_rom_2)/16 ;
+		Temp_str.ds18b20_i[2] = DS18b20_Get_temp_MatchROM(ds18b20_rom_3)/16 ;
+
+		Temp_str.average_i =(	Temp_str.ds18b20_i[0]
+							+	Temp_str.ds18b20_i[1]
+							+	Temp_str.ds18b20_i[2]) / 3 ;
 	}
 
 	if (TimeSt.Seconds == 0) {
-		sprintf(DataChar,"%02d:%02d:%02d %s ",TimeSt.Hours, TimeSt.Minutes, TimeSt.Seconds, WeekDay_char[(DateSt.WeekDay+3)%6]);
-		HAL_UART_Transmit(&huart1, (uint8_t *)DataChar, strlen(DataChar), 100);
-		ds3231_PrintDate( &DateSt, &huart1 ) ;
-
-		temp_average_i8 = (temp1 + temp2 + temp3) / 3 ;
-
 		static char relay_status_char[4] = { "nop" };
 		static uint8_t relay_status_u8 = 0 ;
 
-		if (temp_average_i8 < TEMP_MIN )	{
-			relay_status_u8 = 1 ;
-		}
-
-		if (temp_average_i8 > TEMP_MAX )	{
-			relay_status_u8 = 0 ;
-		}
+		if (Temp_str.average_i < TEMP_MIN )		{ relay_status_u8 = 1 ;	}
+		if (Temp_str.average_i > TEMP_MAX )		{ relay_status_u8 = 0 ;	}
 
 		if ( relay_status_u8 == 1 ) {
 			sprintf(relay_status_char,"On ");
@@ -234,16 +220,19 @@ void Thermostat_Main(void) {
 			HAL_GPIO_WritePin ( RELAY_2_GPIO_Port  , RELAY_2_Pin   , GPIO_PIN_SET ) ;
 			}
 
-		//sprintf(DataChar,"%02d:%02d:%02d [%d]\r\n ",TimeSt.Hours, TimeSt.Minutes, TimeSt.Seconds, (DateSt.WeekDay+4)%7);
+		ds3231_PrintTime		( &TimeSt, &huart1 ) ;
+		ds3231_PrintWeek3char	( &DateSt, &huart1 ) ;
+		ds3231_PrintDate		( &DateSt, &huart1 ) ;
+
 		sprintf(DataChar, "%02d:%02d:%02d %s %d\n" , TimeSt.Hours, TimeSt.Minutes, TimeSt.Seconds, WeekDay_char[(DateSt.WeekDay+3)%6] ,relay_status_u8) ;
 		LCD1602_Print_Line(&h1_lcd1602_fc113, DataChar, strlen(DataChar));
 
-		sprintf(DataChar,"%03d %03d %03d %04d\r\n", temp1/10, temp2/10, temp3/10, temp_average_i8 ) ;
+		sprintf(DataChar,"%03d %03d %03d %04d\r\n", Temp_str.ds18b20_i[0]/10, Temp_str.ds18b20_i[1]/10, Temp_str.ds18b20_i[2]/10, Temp_str.average_i ) ;
 		LCD1602_Print_Line(&h1_lcd1602_fc113, DataChar, strlen(DataChar));
 		//DS18b20_Print_serial_number(&huart1);
 		LCD1602_Cursor_Return(&h1_lcd1602_fc113);
 
-		sprintf(DataChar," %04d; %04d; %04d; average=%04d %s\r\n", temp1, temp2, temp3, temp_average_i8, relay_status_char ) ;
+		sprintf(DataChar," %04d; %04d; %04d; average=%04d %s\r\n", Temp_str.ds18b20_i[0], Temp_str.ds18b20_i[1], Temp_str.ds18b20_i[2], Temp_str.average_i, relay_status_char ) ;
 		HAL_UART_Transmit(&huart1, (uint8_t *)DataChar, strlen(DataChar), 100);
 	} else {
 		sprintf(DataChar," %02d:%02d:%02d\r" , TimeSt.Hours, TimeSt.Minutes, TimeSt.Seconds ) ;
@@ -253,6 +242,7 @@ void Thermostat_Main(void) {
 		LCD1602_Print_Line(&h1_lcd1602_fc113, DataChar, strlen(DataChar));
 		LCD1602_Cursor_Return(&h1_lcd1602_fc113);
 	}
+
 	HAL_IWDG_Refresh(&hiwdg) ;
 	Reset_RTC_IRQ_Flag() ;
 	ds3231_Alarm1_ClearStatusBit(ADR_I2C_DS3231) ;
